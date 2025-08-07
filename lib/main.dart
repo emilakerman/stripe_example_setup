@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:stripe_example_setup/bloc/stripe_bloc.dart';
 import 'package:stripe_example_setup/stripe_constants.dart';
-import 'package:stripe_example_setup/stripe_service.dart';
 
 void main() async {
   await _setup();
-  runApp(const MainApp());
+  runApp(
+    BlocProvider(create: (context) => StripeBloc(), child: const MainApp()),
+  );
 }
 
 Future<void> _setup() async {
@@ -19,19 +22,32 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Flutter Stripe Example Setup'),
-              ElevatedButton(
-                onPressed: () {
-                  StripeService.I.makePayment();
-                },
-                child: Text("Press"),
-              ),
-            ],
+      home: BlocListener<StripeBloc, StripeState>(
+        listener: (context, state) {
+          if (state.status == StripeStatus.success) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Payment successful!')));
+          }
+          if (state.status == StripeStatus.error) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text("${state.errorMessage}")));
+          }
+        },
+        child: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Flutter Stripe Example Setup'),
+                ElevatedButton(
+                  onPressed:
+                      () => context.read<StripeBloc>().add(MakePayment()),
+                  child: Text("Press"),
+                ),
+              ],
+            ),
           ),
         ),
       ),
