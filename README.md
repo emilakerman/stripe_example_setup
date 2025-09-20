@@ -1,3 +1,4 @@
 # stripe_example_setup
 
-A new Flutter project.
+read commit messages to fully understand the 
+peculiarities of the implementation
